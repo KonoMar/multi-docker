@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t konomar/react-test ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true konomar/react-test npm test
+
+after_success:
+  - docker build -t konomar/multi-client ./client
+  - docker build -t konomar/multi-nginx ./nginx
+  - docker build -t konomar/multi-server ./server
+  - docker build -t konomar/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push konomar/multi-client
+  - docker push konomar/multi-nginx
+  - docker push konomar/multi-server
+  - docker push konomar/multi-worker
